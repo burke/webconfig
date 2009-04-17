@@ -63,7 +63,6 @@ rescue
 	puts "[Failure: Syntax error in config.yml]"
   exit 1
 end
-puts
 # Write the output file and commit it to git.
 File.open("#{CONFIG_PATH}/gen/nginx.gen.conf",'w') do |f|
   f.puts nginx_config

@@ -65,7 +65,7 @@ rack:
       server_name #{@domain};
       root /srv/rack/#{@location}#{@domain}/#{@capistrano ? 'current/' : ''}public;
       passenger_enabled on;
-      rails_env #{@railsenv}
+      rails_env #{@railsenv};
 
       location ~* \.(jpg|jpeg|gif|css|png|js|ico)$ {
         access_log      off;
@@ -97,7 +97,7 @@ rails:
       server_name #{@domain};
       root /srv/rails/#{@location}#{@domain}/#{@capistrano ? 'current/' : ''}public;
       passenger_enabled on;
-      rails_env #{@railsenv}
+      rails_env #{@railsenv};
 
       location ~* \.(jpg|jpeg|gif|css|png|js|ico)$ {
         access_log      off;

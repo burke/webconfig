@@ -81,4 +81,17 @@ unless system("apachectl -t > /dev/null 2>/dev/null")
   exit 1
 end
 
+# Guess we didn't have any errors.                                                                                         
+r1,r2 = true
+puts "Loading new Apache config..."
+r1=system("apachectl graceful")
+
+puts "Loading new nginx config..."
+r2=system("kill -HUP `cat /var/run/nginx.pid`")
+
+unless r1 and r2
+  puts "[Failure: Servers failed to load new configuration]"
+  exit 1
+end
+
 puts "[success]"

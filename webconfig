@@ -8,8 +8,9 @@ end
 require 'yaml'
 
 CONFIG_PATH = File.dirname(__FILE__)
-NGINX_PORT = 80
-APACHE_PORT = 8080
+DEFAULTS = { 'nginx_port'  => 80,
+             'apache_port' => 8080,
+             'template'    => 'static'}
 
 # No syntax checking whatsoever on the yaml files. You're on your own.
 
@@ -18,12 +19,11 @@ class Vhost
   def initialize(args)
     # This might be dangerous? I'm pretty sure we can trust whoever's
     # writing our vhost definitions :)
-    @nginx_port  = NGINX_PORT
-    @apache_port = APACHE_PORT
+    args = DEFAULTS.merge args
     args.each do |k,v|
       instance_variable_set "@#{k}", v
     end
-    @template ||= 'static'
+
     # We need to wrap @location in slashes, but if it's root, that gives us
     #   // or ///, so we collapse multiple sequential slashes to a single /.
     @location = "/#{@location}/"

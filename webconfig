@@ -74,4 +74,14 @@ File.open("#{CONFIG_PATH}/gen/apache.gen.conf",'w') do |f|
   f.puts apache_config
 end
 
+unless system("sudo nginx -t > /dev/null 2>/dev/null")
+  puts "[Failure: Nginx Config Invalid]"
+  exit 1
+end
+
+unless system("apachectl -t > /dev/null 2>/dev/null")
+  puts "[Failure: Apache Config Invalid]"
+  exit 1
+end
+
 puts "[success]"

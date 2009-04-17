@@ -32,6 +32,8 @@ class Vhost
     @templates = YAML.load(open("#{CONFIG_PATH}/templates.yml"))
   end
 
+  # Again, this is stupid. However, if we can't trust the people writing our
+  #  config.yml, we have bigger problems.
   def apache_config
     if @templates.has_key? @template
       eval("return \"#{@templates[@template]['content_for_apache']}\"")
@@ -46,23 +48,15 @@ class Vhost
 
 end
 
-nginx_config = ""
+nginx_config  = ""
 apache_config = ""
-
-# Default/catchall vhost.
-# nginx_config << <<"END"
-# server {
-#   listen #{NGINX_PORT};
-#   server_name _ *;
-# }
-# END
 
 hosts = YAML.load(open("#{CONFIG_PATH}/config.yml"))
 
 begin
   hosts.each do |k,v|
     vhost = Vhost.new(v.merge({'domain' => k}))
-    nginx_config << vhost.nginx_config
+    nginx_config  << vhost.nginx_config
     apache_config << vhost.apache_config
     print '.'
   end

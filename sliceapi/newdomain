@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# -*- ruby -*-
 
 # ./newdomain domain.com burke y
 # 1: Domain name
@@ -35,7 +36,7 @@ def tests
 	# Check if domain has not yet been created
 	#hosts = YAML.load(open('/etc/httpd/conf/vhosts.yml'))
 	
-	hosts = YAML.load(open('/etc/httpd/conf/vhosts.yml'))
+	hosts = YAML.load(open('/opt/webconfig/config.yml'))
 	hosts.each do |key , value |
 		if( key == ARGV[0] && value['Location'] == ARGV[1])
 			errors << " Domain already configured"
@@ -61,14 +62,17 @@ def build
 	ZoneCreator.new(domain,googleapps=='y')
 	
 	puts "Setting vhost Information ..."
-	hosts = YAML.load(open('/etc/httpd/conf/vhosts.yml'))
-	hosts.merge!({domain => {'location' => location}})
-	File.open('/etc/httpd/conf/vhosts.yml', 'w') do |f|
+	hosts = YAML.load(open('/opt/webconfig/config.yml'))
+	hosts.merge!({domain => {'location' => location, 'template' => 'static'}})
+  `cp /opt/webconfig/config.yml /opt/webconfig/config.last.yml`
+	File.open('/opt/webconfig/config.yml', 'w') do |f|
   		f.puts YAML.dump(hosts)
 	end
 	
 	## Make files
-	puts "Sucessfully Adding Vhost"
+  `mkdir -p /srv/http/#{location}/#{domain}/htdocs`
+  
+  system("/opt/webconfig/webconfig")
 end
 def banner
 	puts " sudo ./newdomain <domain> <prefix> ?<googleapps>"

@@ -3,7 +3,7 @@
 require 'rubygems'
 require 'activeresource'
 
-SITE = "https://#{File.read('api_key.txt')}@api.slicehost.com/"
+SITE = "https://#{File.read(File.join(File.dirname(__FILE__),'api_key.txt')).strip}@api.slicehost.com/"
 OGLAROON="209.20.65.91"
 
 class ZoneCreator

@@ -94,4 +94,8 @@ unless r1 and r2
   exit 1
 end
 
+unless system("/etc/rc.d/nginx restart")
+  puts "[Failure: Nginx didn't reinitialize properly. Syntax error in initscript?]"
+end
+
 puts "[success]"

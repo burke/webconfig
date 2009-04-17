@@ -1,0 +1,116 @@
+--- 
+matthewsebastian.ca:
+  template: apache
+  location: matt
+richmondgreen.ca:
+  template: static
+  location: stefan
+garryloewen.com: 
+  template: rails
+  railsenv: production
+  capistrano: true
+static.53cr.com:
+  template: static
+  location: 53cr
+victoriaptashnick.com:
+  template: apache
+  location: dave
+hammerofcode.com:
+  template: static
+  location: ryan
+cr53.com:
+  template: alias
+  redirect: 53cr.com
+3squarefinancial.ca: 
+  template: rails
+  railsenv: production
+  capistrano: true
+ryanneufeld.ca:
+  template: static
+  location: ryan
+burkelibbey.org:
+  template: static
+  location: burke
+fgmbcc.ca:
+  template: apache
+  location: burke
+sandbox.treehouse11.com:
+  template: apache
+  location: dave
+paulklassen.org:
+  template: apache
+  location: burke
+53cr.com:
+  template: static
+  location: 53cr
+nbscwinnipeg.ca:
+  template: rails
+  railsenv: production
+mastercareinc.net:
+  template: static
+  location: jjbud
+winnipegskateboarding.ca:
+  template: apache
+  location: dave
+umes.mb.ca:
+  template: apache
+  location: burke/umes
+static.iamstef.net:
+  template: static
+  location: stefan
+text.umes.mb.ca: 
+  template: rails
+  railsenv: production
+wyc.iamstef.net:
+  template: static
+  location: stefan
+hauteflashes.ca:
+  template: apache
+  location: dave
+chromium53.com:
+  template: alias
+  redirect: 53cr.com
+square.53cr.com: 
+  template: rails
+  railsenv: development
+  capistrano: true
+mimc.iamstef.net: 
+  template: rails
+  railsenv: development
+durch.iamstef.net:
+  template: apache
+  location: stefan
+square-trunk.53cr.com: 
+  template: rails
+  railsenv: development
+universityclub.ca: 
+  template: rails                   
+  railsenv: production
+umieee.com: 
+  template: apache
+  location: burke
+ofapathy.com: 
+  template: static
+  location: stefan
+prairiejewel.com: 
+  template: apache
+  location: dave
+mimc2009.ca: 
+  template: rails
+  railsenv: production
+cs335.hammerofcode.com: 
+  template: rails
+  railsenv: development
+  capistrano: true
+libbey.name:
+  template: static
+  location: burke
+treehouse11.com:
+  template: apache
+  location: dave
+burke.libbey.name:
+  template: static
+  location: burke
+iamstef.net:
+  template: static
+  location: stefan

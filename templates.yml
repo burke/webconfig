@@ -1,0 +1,109 @@
+--- 
+static:
+  content_for_nginx: |
+    server {
+      listen #{@nginx_port};
+      server_name www.#{@domain};
+      rewrite ^(.*) http://#{@domain}$1 permanent;
+    }
+    server {
+      listen #{@nginx_port};
+      server_name #{@domain};
+      root /srv/http#{@location}#{@domain}/htdocs;
+
+      location ~* \.(jpg|jpeg|gif|css|png|js|ico)$ {
+        access_log      off;
+        expires         30d;
+      }
+
+      #{@custom}
+    }
+  content_for_apache:
+
+apache:
+  content_for_nginx: |
+    server {
+      listen #{@nginx_port};
+      server_name www.#{@domain};
+      rewrite ^(.*) http://#{@domain}$1 permanent;
+    }
+    server {
+      listen #{@nginx_port};
+      server_name #{@domain};
+      root /srv/http#{@location}#{@domain}/htdocs;
+      
+      location ~* \.(jpg|jpeg|gif|css|png|js|ico)$ {
+        access_log      off;
+        expires         30d;
+      }
+      
+      location / {
+        access_log      off;
+        proxy_pass http://localhost:#{@apache_port};
+        proxy_set_header X-Real-IP  $remote_addr;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      }
+      #{@custom}
+    }
+  content_for_apache: |
+    <VirtualHost *>
+      ServerName    #{@domain}
+      DocumentRoot  /srv/http#{@location}#{@domain}/htdocs
+      #{@apache_custom}
+    </VirtualHost>
+    
+rack:
+  content_for_nginx: |
+    server {
+      listen #{@nginx_port};
+      server_name www.#{@domain};
+      rewrite ^(.*) http://#{@domain}$1 permanent;
+    }
+    server {
+      listen #{@nginx_port};
+      server_name #{@domain};
+      root /srv/rack/#{@location}#{@domain}/#{@capistrano ? 'current/' : ''}public;
+      passenger_enabled on;
+      rails_env #{@railsenv}
+
+      location ~* \.(jpg|jpeg|gif|css|png|js|ico)$ {
+        access_log      off;
+        expires         30d;
+      }
+
+      #{@custom}
+    }
+  content_for_apache:
+
+alias:
+  content_for_nginx: |
+    server {
+      listen #{@nginx_port};
+      server_name #{@domain} www.#{@domain}
+      rewrite ^(.*) http://#{@redirect}$1 permanent;
+    }
+  content_for_apache:
+
+rails:
+  content_for_nginx: |
+    server {
+      listen #{@nginx_port};
+      server_name www.#{@domain};
+      rewrite ^(.*) http://#{@domain}$1 permanent;
+    }
+    server {
+      listen #{@nginx_port};
+      server_name #{@domain};
+      root /srv/rails/#{@location}#{@domain}/#{@capistrano ? 'current/' : ''}public;
+      passenger_enabled on;
+      rails_env #{@railsenv}
+
+      location ~* \.(jpg|jpeg|gif|css|png|js|ico)$ {
+        access_log      off;
+        expires         30d;
+      }
+
+      #{@custom}
+    }
+  content_for_apache:

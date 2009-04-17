@@ -1,0 +1,83 @@
+#!/usr/bin/env ruby
+# -*- ruby -*-
+puts "Regenerating Vhosts"
+begin
+  require 'rubygems'
+rescue LoadError
+end
+require 'yaml'
+
+CONFIG_PATH = File.dirname(__FILE__)
+NGINX_PORT = 80
+APACHE_PORT = 8080
+
+# No syntax checking whatsoever on the yaml files. You're on your own.
+
+class Vhost
+
+  def initialize(args)
+    # This might be dangerous? I'm pretty sure we can trust whoever's
+    # writing our vhost definitions :)
+    args.each do |k,v|
+      instance_variable_set "@#{k}", v
+      instance_variable_set "@nginx_port", NGINX_PORT
+      instance_variable_set "@apache_port", APACHE_PORT
+    end
+    @template ||= 'static'
+    # We need to wrap @location in slashes, but if it's root, that gives us
+    #   // or ///, so we collapse multiple sequential slashes to a single /.
+    @location = "/#{@location}/"
+    @location.gsub!(/\/+/,'/')
+    
+    @templates = YAML.load(open("#{CONFIG_PATH}/templates.yml"))
+  end
+
+  def apache_config
+    if @templates.has_key? @template
+      eval("return \"#{@templates[@template]['content_for_apache']}\"")
+    end
+  end
+
+  def nginx_config
+    if @templates.has_key? @template
+      eval("return \"#{@templates[@template]['content_for_nginx']}\"")
+    end
+  end
+
+end
+
+nginx_config = ""
+apache_config = ""
+
+# Default/catchall vhost.
+# nginx_config << <<"END"
+# server {
+#   listen #{NGINX_PORT};
+#   server_name _ *;
+# }
+# END
+
+hosts = YAML.load(open("#{CONFIG_PATH}/config.yml"))
+
+begin
+  hosts.each do |k,v|
+    vhost = Vhost.new(v.merge({'domain' => k}))
+    nginx_config << vhost.nginx_config
+    apache_config << vhost.apache_config
+    print '.'
+  end
+rescue
+	puts "[Failure]"
+  exit 1 # Just return an error. We don't care what it is.
+  # The initscript will smack somebody on the head and fail.
+end
+puts
+# Write the output file and commit it to git.
+File.open("#{CONFIG_PATH}/gen/nginx.gen.conf",'w') do |f|
+  f.puts nginx_config
+end
+File.open("#{CONFIG_PATH}/gen/apache.gen.conf",'w') do |f|
+  f.puts apache_config
+end
+
+puts "[success]"

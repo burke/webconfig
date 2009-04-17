@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # -*- ruby -*-
-puts "Regenerating Vhosts"
+puts "Building configuration..."
 begin
   require 'rubygems'
 rescue LoadError
@@ -58,12 +58,10 @@ begin
     vhost = Vhost.new(v.merge({'domain' => k}))
     nginx_config  << vhost.nginx_config
     apache_config << vhost.apache_config
-    print '.'
   end
 rescue
-	puts "[Failure]"
-  exit 1 # Just return an error. We don't care what it is.
-  # The initscript will smack somebody on the head and fail.
+	puts "[Failure: Syntax error in config.yml]"
+  exit 1
 end
 puts
 # Write the output file and commit it to git.

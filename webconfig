@@ -18,8 +18,8 @@ class Vhost
   def initialize(args)
     # This might be dangerous? I'm pretty sure we can trust whoever's
     # writing our vhost definitions :)
-    instance_variable_set "@nginx_port", NGINX_PORT
-    instance_variable_set "@apache_port", APACHE_PORT
+    @nginx_port  = NGINX_PORT
+    @apache_port = APACHE_PORT
     args.each do |k,v|
       instance_variable_set "@#{k}", v
     end

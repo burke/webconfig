@@ -80,7 +80,7 @@ alias:
   content_for_nginx: |
     server {
       listen #{@nginx_port};
-      server_name #{@domain} www.#{@domain}
+      server_name #{@domain} www.#{@domain};
       rewrite ^(.*) http://#{@redirect}$1 permanent;
     }
   content_for_apache:

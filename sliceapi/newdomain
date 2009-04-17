@@ -1,0 +1,79 @@
+#!/usr/bin/env ruby
+
+# ./newdomain domain.com burke y
+# 1: Domain name
+# 2: Subdir or /srv/http, etc. to use.
+# 3: Create MX/CNAME ecords for google apps? 'y' or 'n'
+
+require File.join(File.dirname(__FILE__),'sliceapi')
+
+require 'rubygems'
+require 'yaml'
+
+def tests
+	errors = []
+	kill = false
+	
+	# test that the user has correct permissions
+	if `whoami` !~ /root/ 
+		errors << "run as root."
+  		kill = true
+	end
+
+	# Checks to see if a Domain is specified
+	if(ARGV[0].nil?)
+		errors << "Domain missing"
+		kill = true
+	end	
+
+	# Checks to see if a Prefix is set
+	if(ARGV[1].nil?)
+		errors << "Prefix missing "
+		kill = true
+	end
+	
+	# Check if domain has not yet been created
+	#hosts = YAML.load(open('/etc/httpd/conf/vhosts.yml'))
+	
+	hosts = YAML.load(open('/etc/httpd/conf/vhosts.yml'))
+	hosts.each do |key , value |
+		if( key == ARGV[0] && value['Location'] == ARGV[1])
+			errors << " Domain already configured"
+			kill = true
+			break
+		end
+	end
+	
+	# Check if files are created or not
+	 if kill
+		banner
+		errors.each { |e| puts "Error: #{e}" }
+		exit 1
+	end
+end
+
+def build
+	domain	   = ARGV[0]
+	location   = ARGV[1]
+	googleapps = ARGV[2]
+
+	puts "Setting DNS information ..." unless googleapps == 'f'
+	ZoneCreator.new(domain,googleapps=='y')
+	
+	puts "Setting vhost Information ..."
+	hosts = YAML.load(open('/etc/httpd/conf/vhosts.yml'))
+	hosts.merge!({domain => {'location' => location}})
+	File.open('/etc/httpd/conf/vhosts.yml', 'w') do |f|
+  		f.puts YAML.dump(hosts)
+	end
+	
+	## Make files
+	puts "Sucessfully Adding Vhost"
+end
+def banner
+	puts " sudo ./newdomain <domain> <prefix> ?<googleapps>"
+end
+if __FILE__ == $0
+	tests 
+	build 
+end

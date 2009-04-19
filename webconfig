@@ -48,27 +48,53 @@ module Webconfig
 
   end
 
-  def self.test_and_load_config(server)
-    srv_mod_name = "#{server.capitalize}Server"
-    unless Object.const_defined?(srv_mod_name)
-      begin
-        require "servers/#{server}"
-      rescue LoadError
-        puts "*** DON'T KNOW HOW TO CHECK AND LOAD SERVER: #{server} ***"
-        puts " ** YOU'LL HAVE TO RESTART IT MANUALLY."
-        return
+  def self.test_configs
+    SERVERS.inject(true) do |all_ok, server|
+      ok = Server.new(server).config_ok?
+      unless ok
+        puts ">> Config check failed for server: #{server}."
       end
-    end
-    srv_mod = Object.const_get(srv_mod_name)
-    unless srv_mod::config_ok?
-      puts "*** CONFIG CHECK FAILED FOR SERVER: #{server} ***"
-    else
-      unless srv_mod::reload
-        puts "*** RELOAD SEEMS TO HAVE FAILED FOR SERVER #{server}. ***"
-      end
+      all_ok &&= ok
     end
   end
+
+  def self.load_configs
+    SERVERS.inject(true) do |all_ok, server|
+      ok = Server.new(server).reload
+      unless ok
+        puts ">> Reload seems to have failed for server: #{server}."
+      end
+      all_ok &&= ok
+    end
+  end
+  
+  class Server
+
+    def initialize(name)
+      @name = name
+      srv_mod_name = "#{name.capitalize}Server"
+      unless Object.const_defined?(srv_mod_name)
+        begin
+          require "servers/#{@name}"
+        rescue LoadError
+          puts ">> Don't know how to interact with server: #{@name}."
+          puts "   Restart it manually or define rules in lib/servers/#{@name}.rb"
+          @srv_mod = false
+        end
+      end
+      @srv_mod = Object.const_get(srv_mod_name)
+    end
+
+    def reload
+      @srv_mod ? @srv_mod::reload : true
+    end
+
+    def config_ok?
+      @srv_mod ? @srv_mod::config_ok? : true
+    end
     
+  end
+  
   class Domain
 
     def initialize(args)
@@ -112,9 +138,22 @@ if __FILE__ == $0
     File.open("#{Webconfig::WEBCONFIG_PATH}/gen/#{server}.gen.conf",'w') do |f|
       f.puts config
     end
-    Webconfig.test_and_load_config(server)
   end
 
-  puts "[success]"
+  puts "Testing new configuration..."
+  
+  unless Webconfig.test_configs
+    puts "SERVERS REPORTED CONFIG ERRORS. NOT RELOADING."
+    exit 1
+  end
+
+  puts "Config OK. Reloading Servers..."
+  
+  if Webconfig.load_configs
+    puts "SERVERS REPORTED ERRORS WHILE RELOADING. INVESTIGATE IMMEDIATELY."
+    exit 1
+  end
+
+  puts "All OK."
   
 end

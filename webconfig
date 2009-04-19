@@ -24,11 +24,9 @@ module Webconfig
 
   # Return a hash of configuration files by server. Eg. {"apache" => "<VirtualHost *>........"}
   def self.config_by_server
-    output = {}
-    SERVERS.each do |server|
-      output.merge!({server => config_for_server(server)})
+    SERVERS.inject({}) do |hash, server|
+      hash.merge!({server => config_for_server(server)})
     end
-    return output
   end
   
   def self.config_for_server(server)
@@ -40,13 +38,11 @@ module Webconfig
       ! relevant_templates.keys.include?(args['template'])
     end
 
-    relevant_domains.each do |domain, args|
-      cfs = "content_for_#{server}"
-      domaininfo = args.merge({"domain" => domain})
+    relevant_domains.inject("") do |output, domain|
+      # Add the domain name (hash key) to the args (hash value)
+      domaininfo = domain[1].merge({"domain" => domain[0]})
       output << Domain.new(domaininfo).content_for_server(server)
     end
-
-    return output
 
   end
 

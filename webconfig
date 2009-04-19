@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 # -*- ruby -*-
+
 puts "Building configuration..."
 begin
   require 'rubygems'
@@ -7,96 +8,124 @@ rescue LoadError
 end
 require 'yaml'
 
-CONFIG_PATH = File.dirname(__FILE__)
-DEFAULTS = { 'nginx_port'  => 80,
-             'apache_port' => 8080,
-             'template'    => 'static'}
-
 # No syntax checking whatsoever on the yaml files. You're on your own.
 
-class Vhost
+module Webconfig
 
-  def initialize(args)
-    # This might be dangerous? I'm pretty sure we can trust whoever's
-    # writing our vhost definitions :)
-    args = DEFAULTS.merge args
-    args.each do |k,v|
-      instance_variable_set "@#{k}", v
+  CONFIG_PATH = File.dirname(__FILE__)
+  DEFAULTS = { 'nginx_port'  => 80,
+               'apache_port' => 8080,
+               'template'    => 'static'}
+
+  TEMPLATES = YAML.load_file("#{CONFIG_PATH}/templates.yml")
+  DOMAINS   = YAML.load_file("#{CONFIG_PATH}/config.yml")
+  # Get a list of the different servers templates.yml specifies configs for.
+  # example: ["nginx", "apache"]
+  SERVERS = TEMPLATES.values.map(&:keys).flatten.uniq.map{|s|s.gsub('content_for_','')}
+
+  # Return a hash of configuration files by server. Eg. {"apache" => "<VirtualHost *>........"}
+  def self.config_by_server
+    output = {}
+    SERVERS.each do |server|
+      output.merge!({server => config_for_server(server)})
     end
-
-    # We need to wrap @location in slashes, but if it's root, that gives us
-    #   // or ///, so we collapse multiple sequential slashes to a single /.
-    @location = "/#{@location}/"
-    @location.gsub!(/\/+/,'/')
+    return output
+  end
+  
+  def self.config_for_server(server)
+    relevant_templates = TEMPLATES.reject{|k,v| ! v.has_key?("content_for_#{server}")}
+    output = ""
     
-    @templates = YAML.load(open("#{CONFIG_PATH}/templates.yml"))
+    # Each domain of a template type that specifies configuration for this server
+    relevant_domains = DOMAINS.reject do |domain, args|
+      ! relevant_templates.keys.include?(args['template'])
+    end
+
+    relevant_domains.each do |domain, args|
+      cfs = "content_for_#{server}"
+      domaininfo = args.merge({"domain" => domain})
+      output << Domain.new(domaininfo).content_for_server(server)
+    end
+
+    return output
+
   end
 
-  # Again, this is stupid. However, if we can't trust the people writing our
-  #  config.yml, we have bigger problems.
-  def apache_config
-    if @templates.has_key? @template
-      eval("return \"#{@templates[@template]['content_for_apache']}\"")
+  class Domain
+
+    def initialize(args)
+      # This might be dangerous? I'm pretty sure we can trust whomever's
+      # writing our vhost definitions :)
+      args = DEFAULTS.merge args
+      args.each do |k,v|
+        instance_variable_set "@#{k}", v
+      end
+
+      # We need to wrap @location in slashes, but if it's root, that gives us
+      #   // or ///, so we collapse multiple sequential slashes to a single /.
+      @location = "/#{@location}/"
+      @location.gsub!(/\/+/,'/')
+    end
+
+    def content_for_server(server)
+      cfs = "content_for_#{server}"
+      begin
+       eval("return <<-\"END\"
+
+#{Webconfig::TEMPLATES[@template][cfs]}
+
+        END")
+      rescue
+        raise SyntaxError, "Invalid syntax in configuration files. Failed parsing #{domain}."
+      end
+    end
+  end
+end
+
+
+if __FILE__ == $0
+
+  config = Webconfig.config_by_server
+
+  config.each do |k,v|
+    File.open("#{Webconfig::CONFIG_PATH}/gen/#{k}.gen.conf",'w') do |f|
+      f.puts v
     end
   end
 
-  def nginx_config
-    if @templates.has_key? @template
-      eval("return \"#{@templates[@template]['content_for_nginx']}\"")
-    end
-  end
-
+  # TODO: Reimplement syntax checking and reloading.
+  
 end
 
-nginx_config  = ""
-apache_config = ""
+# unless system("sudo nginx -t > /dev/null 2>/dev/null")
+#   puts "[Failure: Nginx Config Invalid]"
+#   exit 1
+# end
 
-hosts = YAML.load(open("#{CONFIG_PATH}/config.yml"))
+# unless system("apachectl -t > /dev/null 2>/dev/null")
+#   puts "[Failure: Apache Config Invalid]"
+#   exit 1
+# end
 
-begin
-  hosts.each do |k,v|
-    vhost = Vhost.new(v.merge({'domain' => k}))
-    nginx_config  << vhost.nginx_config
-    apache_config << vhost.apache_config
-  end
-rescue
-	puts "[Failure: Syntax error in config.yml]"
-  exit 1
-end
+# # Guess we didn't have any errors.                                                                                         
+# r1,r2 = true
+# puts "Loading new Apache config..."
+# r1=system("apachectl graceful")
 
-# Write the output file and commit it to git.
-File.open("#{CONFIG_PATH}/gen/nginx.gen.conf",'w') do |f|
-  f.puts nginx_config
-end
-File.open("#{CONFIG_PATH}/gen/apache.gen.conf",'w') do |f|
-  f.puts apache_config
-end
+# # Turns out that doing a kill -HUP as of passenger 2.2.1 creates zombie processes.
+# # Guess we'll just run the initscript restart?
+# # I'm hoping this is fixed soon.
+# puts "Loading new nginx config..."
+# #r2=system("kill -HUP `cat /var/run/nginx.pid`")
+# system("/etc/rc.d/nginx restart")
 
-unless system("sudo nginx -t > /dev/null 2>/dev/null")
-  puts "[Failure: Nginx Config Invalid]"
-  exit 1
-end
+# unless r1 and r2
+#   puts "[Failure: Servers failed to load new configuration]"
+#   exit 1
+# end
 
-unless system("apachectl -t > /dev/null 2>/dev/null")
-  puts "[Failure: Apache Config Invalid]"
-  exit 1
-end
-
-# Guess we didn't have any errors.                                                                                         
-r1,r2 = true
-puts "Loading new Apache config..."
-r1=system("apachectl graceful")
-
-puts "Loading new nginx config..."
-r2=system("kill -HUP `cat /var/run/nginx.pid`")
-
-unless r1 and r2
-  puts "[Failure: Servers failed to load new configuration]"
-  exit 1
-end
-
-unless system("/etc/rc.d/nginx restart")
-  puts "[Failure: Nginx didn't reinitialize properly. Syntax error in initscript?]"
-end
+# unless system("/etc/rc.d/nginx restart")
+#   puts "[Failure: Nginx didn't reinitialize properly. Syntax error in initscript?]"
+# end
 
 puts "[success]"

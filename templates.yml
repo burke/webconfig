@@ -18,7 +18,6 @@ static:
 
       #{@custom}
     }
-  content_for_apache:
 
 apache:
   content_for_nginx: |
@@ -74,7 +73,6 @@ rack:
 
       #{@custom}
     }
-  content_for_apache:
 
 alias:
   content_for_nginx: |
@@ -83,7 +81,6 @@ alias:
       server_name #{@domain} www.#{@domain};
       rewrite ^(.*) http://#{@redirect}$1 permanent;
     }
-  content_for_apache:
 
 rails:
   content_for_nginx: |
@@ -106,4 +103,3 @@ rails:
 
       #{@custom}
     }
-  content_for_apache:

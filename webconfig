@@ -3,6 +3,8 @@
 
 # Copyright 2009 Burke Libbey / Chromium 53. Released under MIT License.
 
+$LOAD_PATH << File.join(File.dirname(__FILE__),'lib')
+
 begin
   require 'rubygems'
 rescue LoadError

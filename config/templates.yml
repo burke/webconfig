@@ -62,7 +62,7 @@ rack:
     server {
       listen #{@nginx_port};
       server_name #{@domain};
-      root /srv/rack/#{@location}#{@domain}/#{@capistrano ? 'current/' : ''}public;
+      root /srv/rack#{@location}#{@domain}/#{@capistrano ? 'current/' : ''}public;
       passenger_enabled on;
       rails_env #{@railsenv};
 
@@ -92,7 +92,7 @@ rails:
     server {
       listen #{@nginx_port};
       server_name #{@domain};
-      root /srv/rails/#{@location}#{@domain}/#{@capistrano ? 'current/' : ''}public;
+      root /srv/rails#{@location}#{@domain}/#{@capistrano ? 'current/' : ''}public;
       passenger_enabled on;
       rails_env #{@railsenv};
 

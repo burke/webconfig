@@ -2,7 +2,7 @@
 
 ## Description
 
-Webconfig is a tool to generate Virtual Host configuration files for web servers. I use it to manage Apache and Nginx, but I'm sure you could find additional uses for it.
+Webconfig is a tool to generate Virtual Host configuration files for web servers. I use it to manage Apache and Nginx, but I'm sure you could find additional uses for it. It parses a vhost specification file and generates the appropriate server configuration files based on the templates you define (or use mine).
 
 ![Helpful Diagram](http://burkelibbey.org/h/webconfig.png)
 

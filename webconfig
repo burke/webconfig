@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 # -*- ruby -*-
 
+# Copyright 2009 Burke Libbey / Chromium 53. Released under MIT License.
+
 puts "Building configuration..."
 begin
   require 'rubygems'
@@ -85,12 +87,13 @@ if __FILE__ == $0
 
   config = Webconfig.config_by_server
 
+  # Write out a file in ./gen for each server configured. 
   config.each do |k,v|
     File.open("#{Webconfig::WEBCONFIG_PATH}/gen/#{k}.gen.conf",'w') do |f|
       f.puts v
     end
   end
 
+  puts "[success]"
+  
 end
-
-puts "[success]"

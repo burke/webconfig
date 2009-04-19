@@ -70,11 +70,11 @@ module Webconfig
     def content_for_server(server)
       cfs = "content_for_#{server}"
       begin
-       eval("return <<-\"END\"
+       eval("return <<-\"SOMEUNUSUALTOKEN_END\"
 
 #{Webconfig::TEMPLATES[@template][cfs]}
 
-        END")
+        SOMEUNUSUALTOKEN_END")
       rescue
         raise SyntaxError, "Invalid syntax in configuration files. Failed parsing #{domain}."
       end

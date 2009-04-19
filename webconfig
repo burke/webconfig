@@ -12,13 +12,11 @@ require 'yaml'
 
 module Webconfig
 
-  CONFIG_PATH = File.dirname(__FILE__)
-  DEFAULTS = { 'nginx_port'  => 80,
-               'apache_port' => 8080,
-               'template'    => 'static'}
-
-  TEMPLATES = YAML.load_file("#{CONFIG_PATH}/templates.yml")
-  DOMAINS   = YAML.load_file("#{CONFIG_PATH}/config.yml")
+  WEBCONFIG_PATH = File.dirname(__FILE__)
+  CONFIG_PATH    = File.join(WEBCONFIG_PATH,'config')
+  DEFAULTS       = YAML.load_file("#{CONFIG_PATH}/defaults.yml")
+  TEMPLATES      = YAML.load_file("#{CONFIG_PATH}/templates.yml")
+  DOMAINS        = YAML.load_file("#{CONFIG_PATH}/config.yml")
   # Get a list of the different servers templates.yml specifies configs for.
   # example: ["nginx", "apache"]
   SERVERS = TEMPLATES.values.map(&:keys).flatten.uniq.map{|s|s.gsub('content_for_','')}
@@ -88,7 +86,7 @@ if __FILE__ == $0
   config = Webconfig.config_by_server
 
   config.each do |k,v|
-    File.open("#{Webconfig::CONFIG_PATH}/gen/#{k}.gen.conf",'w') do |f|
+    File.open("#{Webconfig::WEBCONFIG_PATH}/gen/#{k}.gen.conf",'w') do |f|
       f.puts v
     end
   end

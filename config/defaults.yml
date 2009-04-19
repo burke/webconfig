@@ -1,0 +1,4 @@
+---
+apache_port: 8080
+nginx_port: 80
+template: static

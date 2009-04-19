@@ -3,7 +3,6 @@
 
 # Copyright 2009 Burke Libbey / Chromium 53. Released under MIT License.
 
-puts "Building configuration..."
 begin
   require 'rubygems'
 rescue LoadError
@@ -84,6 +83,8 @@ end
 
 
 if __FILE__ == $0
+
+  puts "Building configuration..."
 
   config = Webconfig.config_by_server
 

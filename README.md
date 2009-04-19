@@ -27,3 +27,7 @@ For apache, find your httpd.conf. There's very likely a line that says something
 For nginx, find your nginx.conf, and add a line somewhere in the `http{ }` block: "include /opt/webconfig/gen/nginx.gen.conf".
 
 For other servers, you're on your own. Most configuration file syntaxes have some sort of include directive.
+
+## License
+
+Released under MIT License by Burke Libbey / Chromium 53.

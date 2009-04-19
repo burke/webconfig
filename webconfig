@@ -91,39 +91,6 @@ if __FILE__ == $0
     end
   end
 
-  # TODO: Reimplement syntax checking and reloading.
-  
 end
-
-# unless system("sudo nginx -t > /dev/null 2>/dev/null")
-#   puts "[Failure: Nginx Config Invalid]"
-#   exit 1
-# end
-
-# unless system("apachectl -t > /dev/null 2>/dev/null")
-#   puts "[Failure: Apache Config Invalid]"
-#   exit 1
-# end
-
-# # Guess we didn't have any errors.                                                                                         
-# r1,r2 = true
-# puts "Loading new Apache config..."
-# r1=system("apachectl graceful")
-
-# # Turns out that doing a kill -HUP as of passenger 2.2.1 creates zombie processes.
-# # Guess we'll just run the initscript restart?
-# # I'm hoping this is fixed soon.
-# puts "Loading new nginx config..."
-# #r2=system("kill -HUP `cat /var/run/nginx.pid`")
-# system("/etc/rc.d/nginx restart")
-
-# unless r1 and r2
-#   puts "[Failure: Servers failed to load new configuration]"
-#   exit 1
-# end
-
-# unless system("/etc/rc.d/nginx restart")
-#   puts "[Failure: Nginx didn't reinitialize properly. Syntax error in initscript?]"
-# end
 
 puts "[success]"

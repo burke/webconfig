@@ -4,6 +4,8 @@
 
 Webconfig is a tool to generate Virtual Host configuration files for web servers. I use it to manage Apache and Nginx, but I'm sure you could find additional uses for it.
 
+![Helpful Diagram](http://github.com/burke/webconfig/raw/master/webconfig.png)
+
 ## Installation
 
 Basically, just unpack this wherever you want. I like to keep it in `/opt/webconfig`.

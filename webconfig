@@ -27,7 +27,7 @@ module Webconfig
   # Return a hash of configuration files by server. Eg. {"apache" => "<VirtualHost *>........"}
   def self.config_by_server
     SERVERS.inject({}) do |hash, server|
-      hash.merge!({server => config_for_server(server)})
+      hash.merge({server => config_for_server(server)})
     end
   end
   
@@ -54,7 +54,7 @@ module Webconfig
       unless ok
         puts ">> Config check failed for server: #{server}."
       end
-      all_ok &&= ok
+      all_ok && ok
     end
   end
 
@@ -64,7 +64,7 @@ module Webconfig
       unless ok
         puts ">> Reload seems to have failed for server: #{server}."
       end
-      all_ok &&= ok
+      all_ok && ok
     end
   end
   

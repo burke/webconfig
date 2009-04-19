@@ -149,7 +149,7 @@ if __FILE__ == $0
 
   puts "Config OK. Reloading Servers..."
   
-  if Webconfig.load_configs
+  unless Webconfig.load_configs
     puts "SERVERS REPORTED ERRORS WHILE RELOADING. INVESTIGATE IMMEDIATELY."
     exit 1
   end

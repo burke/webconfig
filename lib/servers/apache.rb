@@ -1,8 +1,8 @@
 module ApacheServer
-  def config_ok?
+  def self.config_ok?
     system("apachectl -t")
   end
-  def reload
+  def self.reload
     system("apachectl graceful")
   end
 end

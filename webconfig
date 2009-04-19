@@ -48,6 +48,27 @@ module Webconfig
 
   end
 
+  def self.test_and_load_config(server)
+    srv_mod_name = "#{server.capitalize}Server"
+    unless Object.const_defined?(srv_mod_name)
+      begin
+        require "servers/#{server}"
+      rescue LoadError
+        puts "*** DON'T KNOW HOW TO CHECK AND LOAD SERVER: #{server} ***"
+        puts " ** YOU'LL HAVE TO RESTART IT MANUALLY."
+        return
+      end
+    end
+    srv_mod = Object.const_get(srv_mod_name)
+    unless srv_mod::config_ok?
+      puts "*** CONFIG CHECK FAILED FOR SERVER: #{server} ***"
+    else
+      unless srv_mod::reload
+        puts "*** RELOAD SEEMS TO HAVE FAILED FOR SERVER #{server}. ***"
+      end
+    end
+  end
+    
   class Domain
 
     def initialize(args)
@@ -87,10 +108,11 @@ if __FILE__ == $0
   config = Webconfig.config_by_server
 
   # Write out a file in ./gen for each server configured. 
-  config.each do |k,v|
-    File.open("#{Webconfig::WEBCONFIG_PATH}/gen/#{k}.gen.conf",'w') do |f|
-      f.puts v
+  config.each do |server, config|
+    File.open("#{Webconfig::WEBCONFIG_PATH}/gen/#{server}.gen.conf",'w') do |f|
+      f.puts config
     end
+    Webconfig.test_and_load_config(server)
   end
 
   puts "[success]"

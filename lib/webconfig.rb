@@ -3,7 +3,7 @@
 
 # Copyright 2009 Burke Libbey / Chromium 53. Released under MIT License.
 
-$LOAD_PATH << File.join(File.dirname(__FILE__),'lib')
+$LOAD_PATH << File.dirname(__FILE__)
 
 begin
   require 'rubygems'
@@ -12,10 +12,8 @@ end
 require 'yaml'
 
 # No syntax checking whatsoever on the yaml files. You're on your own.
-
 module Webconfig
-
-  WEBCONFIG_PATH = File.dirname(__FILE__)
+  WEBCONFIG_PATH = File.join(File.dirname(__FILE__),'..')
   CONFIG_PATH    = File.join(WEBCONFIG_PATH,'config')
   DEFAULTS       = YAML.load_file("#{CONFIG_PATH}/defaults.yml")
   TEMPLATES      = YAML.load_file("#{CONFIG_PATH}/templates.yml")

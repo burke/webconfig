@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+# -*- ruby -*-
+
+require 'lib/webconfig'
+
+Webconfig.run

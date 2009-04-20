@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+# -*- ruby -*-
+
+# Resolve symlinks.
+require 'pathname'
+APP_ROOT = File.join(File.dirname(Pathname.new(__FILE__).realpath),'..')
+
+require "#{APP_ROOT}/lib/webconfig"
+Webconfig.run

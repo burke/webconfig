@@ -39,7 +39,6 @@ module Webconfig
     relevant_domains = DOMAINS.reject do |domain, args|
       ! relevant_templates.keys.include?(args['template'])
     end
-
     relevant_domains.inject("") do |output, domain|
       # Add the domain name (hash key) to the args (hash value)
       domaininfo = domain[1].merge({"domain" => domain[0]})

@@ -6,78 +6,151 @@
 # 2: Subdir or /srv/http, etc. to use.
 # 3: Create MX/CNAME ecords for google apps? 'y' or 'n'
 
-require File.join(File.dirname(__FILE__),'sliceapi')
+#require File.join(File.dirname(__FILE__),'sliceapi')
 
 require 'rubygems'
 require 'yaml'
+require 'optiflag'
 
-def tests
-	errors = []
-	kill = false
-	
-	# test that the user has correct permissions
-	if `whoami` !~ /root/ 
-		errors << "run as root."
-  		kill = true
-	end
 
-	# Checks to see if a Domain is specified
-	if(ARGV[0].nil?)
-		errors << "Domain missing"
-		kill = true
-	end	
+module Newdomain
+  #BASE_PATH = '/opt/webconfig'
+  BASE_PATH      = '/Users/stefan/src/webconfig/'
+  CONFIG_PATH    = "#{BASE_PATH}/config/config.yml"
+  TEMPLATES_PATH = "#{BASE_PATH}/config/templates.yml"
 
-	# Checks to see if a Prefix is set
-	if(ARGV[1].nil?)
-		errors << "Prefix missing "
-		kill = true
-	end
-	
-	# Check if domain has not yet been created
-	#hosts = YAML.load(open('/etc/httpd/conf/vhosts.yml'))
-	
-	hosts = YAML.load(open('/opt/webconfig/config.yml'))
-	hosts.each do |key , value |
-		if( key == ARGV[0] && value['Location'] == ARGV[1])
-			errors << " Domain already configured"
-			kill = true
-			break
-		end
-	end
-	
-	# Check if files are created or not
-	 if kill
-		banner
-		errors.each { |e| puts "Error: #{e}" }
-		exit 1
-	end
-end
+  def self.run(args)
+    
+    args.merge! :type => 'static'
+    args.each do |key,value|
+      next unless key.to_s.match /\w+/ or instance_variables.include? key
+      instance_variable_set "@#{key}", value
+    end
+    
+    display_info
+    ask_for_permission
+    set_vhost
+    set_dns
+    make_directories
+    compile_vhosts
+  end
 
-def build
-	domain	   = ARGV[0]
-	location   = ARGV[1]
-	googleapps = ARGV[2]
+  private 
 
-	puts "Setting DNS information ..." unless googleapps == 'f'
-	ZoneCreator.new(domain,googleapps=='y')
-	
-	puts "Setting vhost Information ..."
-	hosts = YAML.load(open('/opt/webconfig/config.yml'))
-	hosts.merge!({domain => {'location' => location, 'template' => 'static'}})
-  `cp /opt/webconfig/config.yml /opt/webconfig/config.last.yml`
-	File.open('/opt/webconfig/config.yml', 'w') do |f|
-  		f.puts YAML.dump(hosts)
-	end
-	
-	## Make files
-  `mkdir -p /srv/http/#{location}/#{domain}/htdocs`
+  def self.ask_for_permission
+    puts "add this domain? [yes/no]"
+    exit 1 unless $stdin.gets =~ /y|yes/i
+    puts '-'*80
+  end
+
+  def self.display_info
+    puts '-'*80
+    puts "Domain: #{@domain}"
+    puts "type:   #{@type}"
+    puts "user:   #{@user}"
+
+    puts "with"if [@capistrano,@google].any?
+    puts " -> Capistrano enabled" if @capistrano       
+    puts " -> Google DNS enabled" if @google
+    puts '-'*80
+
+  end
+
+  def self.set_vhost  
+    puts "Setting vhost Information ..."
+    hosts  = YAML.load(open(CONFIG_PATH))
+    tmp    = {@domain => {'location' => @user, 
+                          'template' => 'static'}}
+
+	  tmp[@domain]['capistrano'] = @capistrano
+    hosts.merge!(tmp)
+
+    `cp #{CONFIG_PATH} #{CONFIG_PATH}.last`
+
+	  File.open(CONFIG_PATH, 'w') do |f|
+    	f.puts YAML.dump(hosts)
+	  end
+  end
+
+  def self.set_dns
+    puts "Setting DNS information ..."
+    #ZoneCreator.new(@domain,@google)
+  end
+
+  def self.compile_vhosts
+    system("#{BASE_PATH}/webconfig")
+  end
+
+  def self.make_directories
+
+    unless @type =~ /alias/i
+	    puts "making needed directories"
+
+      if  @type =~ /rails/ or @type =~ /rack/
+        dir = "/srv/#{@type}/#{@domain}"
+        dir += "/current" if @capistrano
+      else
+        if @capistrano
+          dir = "/srv/http/#{@user}/#{@domain}/current/htdocs"
+        else
+          dir = "/srv/http/#{@user}/#{@domain}/htdocs"
+        end
+      end
+      
+      `mkdir -p #{dir}`
+    end
+  end
+
+  module NewdomainArgs extend OptiFlagSet
+    flag "domain" do
+      description 'domain you wish to add'
+      alternate_forms  "d"
+
+      #this needs to happen globally. but optiflag does not seem to allow for this
+      validates_against do |flag, errors|
+		    # errors << "This script must be run as root." if `whoami` !~ /root/ 
+      end
+    
+      validates_against do |flag,errors|
+        hosts = YAML.load(open(CONFIG_PATH))
+	      hosts.each do |key , value |
+		      if( key == flag.value && value['Location'] == ARGV.flags.user)
+			      errors << "Domain already configured"
+			      break
+		      end
+        end
+      end
+    end
   
-  system("/opt/webconfig/webconfig")
+    optional_switch_flag "google" do
+      description 'google apps flag'
+      alternate_forms 'g'
+    end
+
+    optional_switch_flag "capistrano" do
+      description 'capistrano flag'
+      alternate_forms 'c'
+    end
+
+    flag "user" do
+      description 'the domains user'
+      alternate_forms "p"
+    end
+  
+    optional_flag "type" do
+      templates = YAML.load(open(TEMPLATES_PATH)).map { |key,value| key }
+      value_in_set(templates)
+    end
+
+    usage_flag :h ,:help
+    extended_help_flag "superhelp"
+
+    and_process!
+  end
 end
-def banner
-	puts " sudo ./newdomain <domain> <prefix> ?<googleapps>"
-end
+
+
 if __FILE__ == $0
-	tests 
-	build 
+  flags = ARGV.flags
+	Newdomain.run(ARGV.flags)
 end

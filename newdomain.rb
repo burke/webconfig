@@ -10,23 +10,25 @@ require File.join(File.dirname(__FILE__),'sliceapi')
 require 'rubygems'
 require 'yaml'
 require 'optiflag'
+require 'webconfig'
 
-
-module Newdomain
+class Domain
   BASE_PATH = '/opt/webconfig'
   CONFIG_PATH    = "#{BASE_PATH}/config/config.yml"
   TEMPLATES_PATH = "#{BASE_PATH}/config/templates.yml"
-  DEFAULTS       = { :type       => 'static',
-                     :capistrano => false}
-  def self.run(args)
+  
+  def initialize(args)
     
-    args = DEFAULTS.merge args
+    args[:type]       ||= 'static'
+    args[:capistrano] ||= false
 
     args.each do |key,value|
       next unless key.to_s.match /\w+/ or instance_variables.include? key
       instance_variable_set "@#{key}", value
-    end
-    
+    end  
+  end
+
+  def run
     puts '-'*80
     display_info
     puts '-'*80
@@ -42,12 +44,12 @@ module Newdomain
 
   private 
 
-  def self.ask_for_permission
+  def ask_for_permission
     puts "add this domain? [yes/no]"
     exit 1 unless $stdin.gets =~ /y|yes/i
   end
 
-  def self.display_info
+  def display_info
     puts "Domain: #{@domain}"
     puts "type:   #{@type}"
     puts "user:   #{@user}"
@@ -57,7 +59,7 @@ module Newdomain
     puts " -> Google MX/CNAME enabled" if @google
   end
 
-  def self.write_config  
+  def write_config  
     puts "Setting vhost Information ..."
     hosts  = YAML.load(open(CONFIG_PATH))
     tmp    = {@domain => {'location'   => @user, 
@@ -73,16 +75,16 @@ module Newdomain
 	  end
   end
 
-  def self.set_dns
+  def set_dns
     puts "Setting DNS information ..."
     ZoneCreator.new(@domain,@google)
   end
 
-  def self.compile_vhosts
-    system("#{BASE_PATH}/webconfig")
+  def compile_vhosts
+    Webconfig.run #now we can very simply get a report on any issues
   end
 
-  def self.make_directories
+  def make_directories
 
     unless @type.match /alias/
 	    puts "making needed directories"
@@ -101,19 +103,20 @@ module Newdomain
       `mkdir -p #{dir}`
     end
   end
+end
 
-  module NewdomainArgs extend OptiFlagSet
-    flag "domain" do
-      description 'domain you wish to add'
-      alternate_forms  "d"
+module DomainFlags extend OptiFlagSet
+  flag "domain" do
+    description 'domain you wish to add'
+    alternate_forms  "d"
 
-      #this needs to happen globally. but optiflag does not seem to allow for this
-      validates_against do |flag, errors|
-		     errors << "This script must be run as root." if `whoami` !~ /root/ 
-      end
+    #this needs to happen globally. but optiflag does not seem to allow for this
+    validates_against do |flag, errors|
+		  #errors << "This script must be run as root." if `whoami` !~ /root/ 
+    end
     
       validates_against do |flag,errors|
-        hosts = YAML.load(open(CONFIG_PATH))
+        hosts = YAML.load(open(Domain::CONFIG_PATH))
 	      hosts.each do |key , value |
 		      if( key == flag.value && value['Location'] == ARGV.flags.user)
 			      errors << "Domain already configured"
@@ -139,7 +142,7 @@ module Newdomain
     end
   
     optional_flag "type" do
-      templates = YAML.load(open(TEMPLATES_PATH)).map { |key,value| key }
+      templates = YAML.load(open(Domain::TEMPLATES_PATH)).map { |key,value| key }
       value_in_set(templates)
     end
 
@@ -148,10 +151,5 @@ module Newdomain
 
     and_process!
   end
-end
 
-
-if __FILE__ == $0
-  flags = ARGV.flags
-	Newdomain.run(ARGV.flags)
-end
+Domain.new(ARGV.flags).run if __FILE__ == $0

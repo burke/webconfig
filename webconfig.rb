@@ -20,11 +20,42 @@ module Webconfig
   DEFAULTS       = YAML.load_file("#{CONFIG_PATH}/defaults.yml")
   TEMPLATES      = YAML.load_file("#{CONFIG_PATH}/templates.yml")
   DOMAINS        = YAML.load_file("#{CONFIG_PATH}/config.yml")
+ 
+  class ConfigError < StandardError; end
+  class ReloadError < StandardError; end
+  
   # Get a list of the different servers templates.yml specifies configs for.
   # example: ["nginx", "apache"]
   SERVERS = TEMPLATES.values.map(&:keys).flatten.uniq.map{|s|s.gsub('content_for_','')}
 
-  # Return a hash of configuration files by server. Eg. {"apache" => "<VirtualHost *>........"}
+  def self.run
+    puts "Building configuration..."
+
+    config = Webconfig.config_by_server
+
+    # Write out a file in ./gen for each server configured. 
+    config.each do |server, config|
+      File.open("#{Webconfig::WEBCONFIG_PATH}/gen/#{server}.gen.conf",'w') do |f|
+        f.puts config
+      end
+    end
+
+    puts "Testing new configuration..."
+  
+    unless Webconfig.test_configs
+      raise ConfigError, "SERVERS REPORTED CONFIG ERRORS. NOT RELOADING."
+    end
+
+    puts "Config OK. Reloading Servers..."
+  
+    unless Webconfig.load_configs
+      raise ReloadError, "SERVERS REPORTED ERRORS WHILE RELOADING. INVESTIGATE IMMEDIATELY."
+    end
+
+    puts "All OK."
+  end
+
+    # Return a hash of configuration files by server. Eg. {"apache" => "<VirtualHost *>........"}
   def self.config_by_server
     SERVERS.inject({}) do |hash, server|
       hash.merge({server => config_for_server(server)})
@@ -126,33 +157,4 @@ module Webconfig
 end
 
 
-if __FILE__ == $0
-
-  puts "Building configuration..."
-
-  config = Webconfig.config_by_server
-
-  # Write out a file in ./gen for each server configured. 
-  config.each do |server, config|
-    File.open("#{Webconfig::WEBCONFIG_PATH}/gen/#{server}.gen.conf",'w') do |f|
-      f.puts config
-    end
-  end
-
-  puts "Testing new configuration..."
-  
-  unless Webconfig.test_configs
-    puts "SERVERS REPORTED CONFIG ERRORS. NOT RELOADING."
-    exit 1
-  end
-
-  puts "Config OK. Reloading Servers..."
-  
-  unless Webconfig.load_configs
-    puts "SERVERS REPORTED ERRORS WHILE RELOADING. INVESTIGATE IMMEDIATELY."
-    exit 1
-  end
-
-  puts "All OK."
-  
-end
+Webconfig.run if __FILE__ == $0

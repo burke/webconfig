@@ -1,3 +1,4 @@
 gen/*
 config.yml
 templates.yml
+defaults.yml

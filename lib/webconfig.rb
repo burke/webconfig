@@ -1,5 +1,4 @@
 #!/usr/bin/env ruby
-# -*- ruby -*-
 
 # Copyright 2009 Burke Libbey / Chromium 53. Released under MIT License.
 
@@ -24,7 +23,7 @@ module Webconfig
   
   # Get a list of the different servers templates.yml specifies configs for.
   # example: ["nginx", "apache"]
-  SERVERS = TEMPLATES.values.map(&:keys).flatten.uniq.map{|s|s.gsub('content_for_','')}
+  SERVERS = TEMPLATES.values.map{|e|e.keys}.flatten.uniq.map{|s|s.gsub('content_for_','')}
 
   def self.run
     puts "Building configuration..."
@@ -153,6 +152,3 @@ module Webconfig
     end
   end
 end
-
-
-Webconfig.run if __FILE__ == $0

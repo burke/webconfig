@@ -3,7 +3,6 @@ module NginxServer
     system("nginx -t >/dev/null 2>/dev/null")
   end
   def self.reload
-    puts "*** WON'T RELOAD NGINX UNTIL PASSENGER FIXES `kill -HUP` ISSUE. RESTART MANUALLY. ***"
-    return false
+    system("kill -HUP `ps ax | grep 'nginx: master' | grep -v grep | head -n1 | awk '{print $1}'`")
   end
 end

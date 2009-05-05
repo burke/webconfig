@@ -5,12 +5,13 @@
 # -g switches google MX/CNAME records on
 # -c switches capistrano support on
 
-require File.join(File.dirname(__FILE__),'sliceapi')
+%W{webconfig sliceapi}.each do |file|
+  require File.join(File.dirname(__FILE__),'lib',file)
+end
 
 require 'rubygems'
 require 'yaml'
 require 'optiflag'
-require 'webconfig'
 
 class Domain
   BASE_PATH = '/opt/webconfig'
@@ -57,6 +58,7 @@ class Domain
     puts "with:"if [@capistrano,@google].any?
     puts " -> Capistrano enabled" if @capistrano       
     puts " -> Google MX/CNAME enabled" if @google
+    puts " -> Rails ENV: #{@railsenv || 'development'}" if @type.match /rack|rails/
   end
 
   def write_config  
@@ -89,7 +91,7 @@ class Domain
     unless @type.match /alias/
 	    puts "making needed directories"
 
-      if  @type.match /rails/ or @type.match /rack/
+      if  @type.match /rails|rack/
         dir = "/srv/#{@type}/#{@domain}"
         dir += "/current" if @capistrano
       else
@@ -112,7 +114,7 @@ module DomainFlags extend OptiFlagSet
 
     #this needs to happen globally. but optiflag does not seem to allow for this
     validates_against do |flag, errors|
-		  #errors << "This script must be run as root." if `whoami` !~ /root/ 
+		  errors << "This script must be run as root." if `whoami` !~ /root/ 
     end
     
       validates_against do |flag,errors|
@@ -136,13 +138,19 @@ module DomainFlags extend OptiFlagSet
       alternate_forms 'c'
     end
 
+    optional_flag "railsenv" do
+      description 'rails environment flag'
+      alternate_forms 'r'
+    end
+
     flag "user" do
       description 'the domains user'
-      alternate_forms "p"
+      alternate_forms "u"
     end
   
     optional_flag "type" do
       templates = YAML.load(open(Domain::TEMPLATES_PATH)).map { |key,value| key }
+      alternate_forms "t"
       value_in_set(templates)
     end
 

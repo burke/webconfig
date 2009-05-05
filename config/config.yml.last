@@ -1,0 +1,147 @@
+--- 
+richmondgreen.ca: 
+  location: stefan
+  template: static
+static.53cr.com: 
+  location: 53cr
+  template: static
+victoriaptashnick.com: 
+  location: dave
+  template: apache
+hammerofcode.com: 
+  location: ryan
+  template: static
+  custom: |
+    autoindex on;
+    location /screenshot.png {
+      expires 0;
+    }
+
+cr53.com: 
+  template: alias
+  redirect: 53cr.com
+3squarefinancial.ca: 
+  railsenv: production
+  template: rails
+  capistrano: true
+burkelibbey.org: 
+  location: burke
+  template: static
+  custom: |
+    location /screenshot.png {
+      expires 0;
+    }
+
+fgmbcc.ca: 
+  location: burke
+  template: apache
+ryanneufeld.ca: 
+  location: ryan
+  template: static
+  custom: |
+    autoindex on;
+
+sandbox.treehouse11.com: 
+  location: dave
+  template: apache
+paulklassen.org: 
+  location: burke
+  template: apache
+53cr.com: 
+  location: 53cr
+  template: static
+matthewsebastian.ca: 
+  location: matt
+  template: apache
+garryloewen.com: 
+  railsenv: production
+  template: rails
+  capistrano: true
+sc.hammerofcode.com: 
+  location: ryan
+  template: apache
+nbscwinnipeg.ca: 
+  railsenv: production
+  template: rails
+mastercareinc.net: 
+  location: jjbud
+  template: static
+winnipegskateboarding.ca: 
+  location: dave
+  template: apache
+umes.mb.ca: 
+  location: burke/umes
+  template: apache
+static.iamstef.net: 
+  location: stefan
+  template: static
+mimc2010.ca: 
+  location: stefan
+  template: rails
+  capistrano: true
+text.umes.mb.ca: 
+  railsenv: production
+  template: rails
+wyc.iamstef.net: 
+  location: stefan
+  template: static
+hauteflashes.ca: 
+  location: dave
+  template: apache
+chromium53.com: 
+  template: alias
+  redirect: 53cr.com
+square.53cr.com: 
+  railsenv: development
+  template: rails
+  capistrano: true
+mimc.iamstef.net: 
+  railsenv: development
+  template: rails
+durch.iamstef.net: 
+  location: stefan
+  template: apache
+square-trunk.53cr.com: 
+  railsenv: development
+  template: rails
+universityclub.ca: 
+  railsenv: production
+  template: rails
+  custom: |
+    rewrite ^(.+)/$ $1;
+    location / {
+      try_files /radiant-cache/${uri}index.html \
+                /radiant-cache/$uri \
+                /radiant-cache/$uri.html \
+                $uri \
+                /;
+    }
+
+umieee.com: 
+  location: burke
+  template: apache
+ofapathy.com: 
+  location: stefan
+  template: static
+prairiejewel.com: 
+  location: dave
+  template: apache
+mimc2009.ca: 
+  railsenv: production
+  template: rails
+cs335.hammerofcode.com: 
+  railsenv: development
+  template: rails
+  capistrano: true
+libbey.name: 
+  location: burke
+  template: static
+treehouse11.com: 
+  location: dave
+  template: apache
+burke.libbey.name: 
+  location: burke
+  template: static
+iamstef.net: 
+  location: stefan
+  template: static

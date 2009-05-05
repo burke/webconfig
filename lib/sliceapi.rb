@@ -9,11 +9,11 @@ OGLAROON="209.20.65.91"
 class ZoneCreator
   
   class Zone < ActiveResource::Base
-    self.site = SITE
+    self.site =  "https://#{File.read(File.join(File.dirname(__FILE__),'api_key.txt')).strip}@api.slicehost.com/"
   end
 
   class Record < ActiveResource::Base
-    self.site = SITE
+    self.site =  "https://#{File.read(File.join(File.dirname(__FILE__),'api_key.txt')).strip}@api.slicehost.com/"
   end
 
   
@@ -23,9 +23,7 @@ class ZoneCreator
     @fqdn   = "#{domain}."
     
     create_zone
-    
     create_records
-    
   end
   
   def create_zone
